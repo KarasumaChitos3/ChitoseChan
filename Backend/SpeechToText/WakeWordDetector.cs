@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using Pv;
 
-namespace Backend.TextToSpeech
+namespace Backend.SpeechToText
 {
     public class WakeWordDetector : IDisposable
     {
