@@ -1,0 +1,10 @@
+<Project Sdk="Godot.NET.Sdk/4.6.0-dev.2">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.66.0" />
+  </ItemGroup>
+</Project>

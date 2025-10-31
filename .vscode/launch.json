@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+            "name": "Play",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "C:\\godot4\\godot.exe",
+            "args": ["--remote-debug","tcp://127.0.0.1:6007"],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+        },
+    ],
+}

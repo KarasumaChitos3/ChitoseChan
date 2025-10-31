@@ -1,0 +1,17 @@
+{
+    "files.exclude": {
+        "**/*.uid": true
+    },
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": false,
+    "explorer.fileNesting.patterns": {
+        // ...
+        "*.gd": "$(capture).gd.uid",
+        "*.cs": "$(capture).cs.uid",
+        "*.gdshader": "$(capture).gdshader.uid",
+        "*.shader": "$(capture).shader.uid",
+        "*.glb": "$(capture).glb.import",
+        "*.gltf": "$(capture).gltf.import",
+        // ...
+    }
+}
