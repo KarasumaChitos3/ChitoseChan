@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Threading.Tasks;
 using Backend.Core;
 using Backend.SpeechToText;
 
@@ -34,6 +36,22 @@ namespace Backend.Core
             // 使用 ?.Invoke() 安全地触发事件
             // 这会通知所有订阅者（比如 Godot 端）
             WakeWordDetected?.Invoke(keywordIndex);
+        }
+
+        /// <summary>
+        /// 公共 API，用于从音频流中识别语音。
+        /// 这是前端（Godot）将会调用的核心方法。
+        /// </summary>
+        public static async Task<string> RecognizeSpeechAsync(Stream audioStream)
+        {
+            if (_whisperService == null)
+            {
+                throw new InvalidOperationException("BackendHost is not initialized.");
+            }
+            Console.WriteLine("BackendHost received audio stream, starting transcription...");
+            var result = await _whisperService.TranscribeAsync(audioStream);
+            Console.WriteLine($"BackendHost transcription result: {result}");
+            return result;
         }
 
         public static void Shutdown()
