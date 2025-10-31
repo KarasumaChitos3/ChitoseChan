@@ -13,7 +13,12 @@ namespace Backend.Core
             Env.LoadFromFile(envPath);
 
             _wakeWordDetector = WakeWordDetector.Create();
+            _wakeWordDetector.OnDetected += OnWakeWordDetected;
+        }
 
+        private static void OnWakeWordDetected(int keywordIndex)
+        {
+            // .. 收到唤醒词检测事件，可触发后续逻辑
         }
     }
 }
