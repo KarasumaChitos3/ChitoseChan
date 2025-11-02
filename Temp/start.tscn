@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://ww3aefy08bkj"]
+
+[ext_resource type="Script" uid="uid://yi78gqmfakra" path="res://Temp/Start.cs" id="1_ngc2r"]
+[ext_resource type="Script" uid="uid://chu46o40icoh4" path="res://Temp/Main.cs" id="2_2qbvs"]
+
+[sub_resource type="AudioStreamMicrophone" id="AudioStreamMicrophone_ngc2r"]
+
+[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_ngc2r"]
+
+[node name="Start" type="Node" unique_id=396863212]
+script = ExtResource("1_ngc2r")
+
+[node name="AudioRecorder" type="AudioStreamPlayer" parent="." unique_id=373888457]
+stream = SubResource("AudioStreamMicrophone_ngc2r")
+bus = &"MicInput"
+
+[node name="AudioPlayer" type="AudioStreamPlayer" parent="." unique_id=517734917]
+stream = SubResource("AudioStreamGenerator_ngc2r")
+
+[node name="PlaybackTimer" type="Timer" parent="." unique_id=144527799]
+wait_time = 0.1
+one_shot = true
+
+[node name="Main" type="Node" parent="." unique_id=578701766]
+script = ExtResource("2_2qbvs")
+
+[connection signal="timeout" from="PlaybackTimer" to="Main" method="PlaybackRecording"]

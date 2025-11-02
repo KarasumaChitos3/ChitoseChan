@@ -14,13 +14,13 @@ namespace Backend.Core
         private static WhisperService _whisperService;
         // 使用 Action<int> 委托，它将传递被触发的唤醒词的索引
         public static event Action<int> WakeWordDetected;
-        public static void Initialize(string envPath = ".env")
+        public static void Initialize(string ggmlPath,string envPath = ".env")
         {
             Env.LoadFromFile(envPath);
 
-            _wakeWordDetector = WakeWordDetector.Create();
-            _whisperService = new WhisperService("");
-            _wakeWordDetector.OnDetected += OnWakeWordDetected;
+            // _wakeWordDetector = WakeWordDetector.Create();
+            _whisperService = new WhisperService(ggmlPath);
+            // _wakeWordDetector.OnDetected += OnWakeWordDetected;
         }
 
         private static void OnWakeWordDetected(int keywordIndex)
@@ -57,6 +57,11 @@ namespace Backend.Core
         public static void Shutdown()
         {
             _wakeWordDetector?.Dispose();
+        }
+
+        public static async Task<string> TestWhisper(Stream audio)
+        {
+            return await _whisperService.TranscribeAsync(audio);
         }
     }
 }
