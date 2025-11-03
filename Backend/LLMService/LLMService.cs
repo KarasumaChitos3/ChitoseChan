@@ -23,7 +23,11 @@ namespace Backend.LLMService
             var modelId = Environment.GetEnvironmentVariable("OPENAI_MODEL")
                           ?? Environment.GetEnvironmentVariable("OPENAI_CHAT_MODEL")
                           ?? "";
-            var endpoint = new Uri(Environment.GetEnvironmentVariable("OPENAI_API_ENDPOINT") ?? "https://api.openai.com/v1");
+            var endpointStr = Environment.GetEnvironmentVariable("OPENAI_API_ENDPOINT")
+                               ?? Environment.GetEnvironmentVariable("OPENAI_ENDPOINT")
+                               ?? Environment.GetEnvironmentVariable("OPENAI_BASE_URL")
+                               ?? "https://api.openai.com/v1";
+            var endpoint = new Uri(endpointStr);
 
             if (!string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(modelId) && endpoint != null)
             {
