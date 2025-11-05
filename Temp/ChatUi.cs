@@ -16,6 +16,7 @@ public partial class ChatUi : Control
 
         public override void _Ready()
         {
+            EnvLoader.LoadEnv();
             // 获取节点引用
             _chatHistory = GetNode<VBoxContainer>("ScrollContainer/ChatHistory");
             _inputBox = GetNode<LineEdit>("HBoxContainer/LineEdit"); // 替换成你自己的节点路径
