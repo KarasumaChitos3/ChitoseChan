@@ -1,0 +1,45 @@
+[gd_scene load_steps=3 format=3 uid="uid://cejuvwnw8bbpd"]
+
+[ext_resource type="Script" uid="uid://bh8bwoc1qhurk" path="res://Temp/ChatUi.cs" id="1_v34g6"]
+[ext_resource type="PackedScene" uid="uid://dpo0p31nqi6o2" path="res://Temp/speech_bubble.tscn" id="2_0k0g8"]
+
+[node name="ChatUI" type="Control" unique_id=955629370]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_v34g6")
+_speechBubbleScene = ExtResource("2_0k0g8")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=771857485]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ChatHistory" type="VBoxContainer" parent="ScrollContainer" unique_id=1023659529]
+layout_mode = 2
+alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1786520751]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -31.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="LineEdit" type="LineEdit" parent="HBoxContainer" unique_id=1222560346]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button" type="Button" parent="HBoxContainer" unique_id=645754027]
+layout_mode = 2
+text = "发送"

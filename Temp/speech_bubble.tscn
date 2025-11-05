@@ -1,0 +1,44 @@
+[gd_scene load_steps=3 format=3 uid="uid://dpo0p31nqi6o2"]
+
+[ext_resource type="Script" uid="uid://b5ir3ych753b3" path="res://Temp/SpeechBubble.cs" id="1_jc5ea"]
+[ext_resource type="Texture2D" uid="uid://dhhae2lq3gtn6" path="res://Temp/msgbubble.jpeg" id="2_jc5ea"]
+
+[node name="SpeechBubble" type="Control" unique_id=1335424658]
+custom_minimum_size = Vector2(500, 50)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_jc5ea")
+
+[node name="NinePatchRect" type="NinePatchRect" parent="." unique_id=671807496]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_jc5ea")
+region_rect = Rect2(0, 0, 1200, 943)
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1933906890]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Label" type="Label" parent="MarginContainer" unique_id=1939318494]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+horizontal_alignment = 3
+vertical_alignment = 3
+autowrap_mode = 2
