@@ -11,6 +11,7 @@ public partial class ChatUi : Control
         private LineEdit _inputBox;
         private Button _sendButton;
         private ScrollContainer _scrollContainer;
+        private Backend.LLMService.LLMService _llmService;
 
 
         public override void _Ready()
@@ -20,6 +21,7 @@ public partial class ChatUi : Control
             _inputBox = GetNode<LineEdit>("HBoxContainer/LineEdit"); // 替换成你自己的节点路径
             _sendButton = GetNode<Button>("HBoxContainer/Button");   // 替换成你自己的节点路径
             _scrollContainer = GetNode<ScrollContainer>("ScrollContainer");
+            _llmService = Backend.LLMService.LLMService.CreateDefaultFromEnv();
 
             // ------------------------------------------------------------------
             // 信号连接 - 将你的输入组件信号连接到这里的处理函数
@@ -56,6 +58,18 @@ public partial class ChatUi : Control
             {
                 AddPlayerMessage(text);
                 _inputBox.Clear();
+                // 模拟 NPC 回复
+                _llmService.AskAsync(text).ContinueWith(t =>
+                {
+                    if (t.IsCompletedSuccessfully)
+                    {
+                        Callable.From(() => AddNpcMessage(t.Result)).CallDeferred();
+                    }
+                    else
+                    {
+                        GD.PrintErr("LLM 服务调用失败：" + t.Exception?.Message);
+                    }
+                });
             }
         }
         
