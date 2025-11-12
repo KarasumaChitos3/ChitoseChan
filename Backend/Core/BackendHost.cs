@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Backend.Core;
 using Backend.SpeechToText;
+using Backend.LLMService;
 
 namespace Backend.Core
 {
@@ -12,6 +13,7 @@ namespace Backend.Core
         private static bool _lock;
         private static WakeWordDetector _wakeWordDetector;
         private static WhisperService _whisperService;
+        private static LLMService.LLMService _llmService;
         // 使用 Action<int> 委托，它将传递被触发的唤醒词的索引
         public static event Action<int> WakeWordDetected;
         public static void Initialize(string ggmlPath,string envPath = ".env")
@@ -20,6 +22,7 @@ namespace Backend.Core
 
             // _wakeWordDetector = WakeWordDetector.Create();
             _whisperService = new WhisperService(ggmlPath);
+            _llmService = Backend.LLMService.LLMService.CreateDefaultFromEnv();
             // _wakeWordDetector.OnDetected += OnWakeWordDetected;
         }
 
@@ -62,6 +65,18 @@ namespace Backend.Core
         public static async Task<string> TestWhisper(Stream audio)
         {
             return await _whisperService.TranscribeAsync(audio);
+        }
+
+        /// <summary>
+        /// 公共 API：向 LLM 提问并返回回答文本。
+        /// </summary>
+        public static async Task<string> AskLLMAsync(string text)
+        {
+            if (_llmService == null)
+            {
+                throw new InvalidOperationException("BackendHost is not initialized.");
+            }
+            return await _llmService.AskAsync(text);
         }
     }
 }

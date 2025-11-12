@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Backend.Core;
 using System.IO;
 using System.Threading.Tasks;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 
 public partial class Main : Node
 {
@@ -21,7 +23,8 @@ public partial class Main : Node
 
     public override void _Ready()
     {
-        BackendHost.Initialize(@"G:\GameProjects\ChitoseChan\models\ggml-base.bin");
+        var ggml_path = OS.HasFeature("editor")?ProjectSettings.GlobalizePath("res://models/ggml-base.bin"):OS.GetExecutablePath().GetBaseDir().PathJoin("models/ggml-base.bin");
+        BackendHost.Initialize(ggml_path);
         // 获取节点引用
         _recorder = GetNode<AudioStreamPlayer>("../AudioRecorder");
         _player = GetNode<AudioStreamPlayer>("../AudioPlayer");
@@ -181,92 +184,68 @@ public partial class Main : Node
         PlaybackRecording();
     }
 
-    // 将录制的样本转换为 16-bit PCM 单声道 WAV 字节数组，始终输出 16kHz
+    // 将录制的样本转换为 16kHz 单声道 16-bit PCM WAV（NAudio）
     private static byte[] CreateWavMono16(List<Vector2> samples, int sourceSampleRate)
     {
         const int targetSampleRate = 16000;
 
-        // 1) 下混为单声道 float [-1,1]
+        // 构建立体声 float 数组（NAudio 的 ISampleProvider 以 float[-1,1] 为单位）
         int srcCount = samples.Count;
-        var mono = new float[srcCount];
+        var stereo = new float[srcCount * 2];
         for (int i = 0; i < srcCount; i++)
         {
-            float m = (samples[i].X + samples[i].Y) * 0.5f;
-            if (m > 1f) m = 1f; else if (m < -1f) m = -1f;
-            mono[i] = m;
+            var v = samples[i];
+            stereo[2 * i] = v.X;
+            stereo[2 * i + 1] = v.Y;
         }
 
-        // 2) 重采样到 16kHz（线性插值）
-        float[] resampled;
-        if (sourceSampleRate != targetSampleRate)
+        // 用自定义 ArraySampleProvider 提供源音频
+        var sourceProvider = new FloatArraySampleProvider(
+            stereo,
+            WaveFormat.CreateIeeeFloatWaveFormat(sourceSampleRate, 2)
+        );
+
+        // 下混为单声道（左/右各 50%）
+        var monoProvider = new StereoToMonoSampleProvider(sourceProvider)
         {
-            // 计算目标长度
-            int dstCount = (int)((long)mono.Length * targetSampleRate / sourceSampleRate);
-            if (dstCount <= 0) dstCount = 1;
-            resampled = new float[dstCount];
-            double ratio = (double)mono.Length / dstCount; // srcIndex = i * ratio
-            for (int i = 0; i < dstCount; i++)
-            {
-                double pos = i * ratio;
-                int idx = (int)pos;
-                double t = pos - idx; // 0..1
-                if (idx >= mono.Length - 1)
-                {
-                    resampled[i] = mono[mono.Length - 1];
-                }
-                else
-                {
-                    float a = mono[idx];
-                    float b = mono[idx + 1];
-                    resampled[i] = (float)(a + (b - a) * t);
-                }
-            }
-        }
-        else
-        {
-            resampled = mono;
-        }
+            LeftVolume = 0.5f,
+            RightVolume = 0.5f
+        };
 
-        // 3) 转换为 16-bit PCM
-        int sampleCount = resampled.Length;
-        var pcm = new short[sampleCount];
-        for (int i = 0; i < sampleCount; i++)
-        {
-            float v = resampled[i];
-            if (v > 1f) v = 1f; else if (v < -1f) v = -1f;
-            pcm[i] = (short)(v * short.MaxValue);
-        }
+        // 重采样至 16kHz（WDL 高质量重采样）
+        var resampledProvider = new WdlResamplingSampleProvider(monoProvider, targetSampleRate);
 
-        int bytesPerSample = 2; // 16-bit
-        int dataSize = sampleCount * bytesPerSample;
-
-        using var ms = new MemoryStream(44 + dataSize);
-        using var bw = new BinaryWriter(ms);
-
-        // RIFF header
-        bw.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
-        bw.Write(36 + dataSize); // ChunkSize
-        bw.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
-
-        // fmt subchunk
-        bw.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
-        bw.Write(16);                 // Subchunk1Size (PCM)
-        bw.Write((short)1);           // AudioFormat (PCM)
-        bw.Write((short)1);           // NumChannels (mono)
-        bw.Write(targetSampleRate);   // SampleRate = 16000
-        bw.Write(targetSampleRate * 1 * bytesPerSample); // ByteRate
-        bw.Write((short)(1 * bytesPerSample));           // BlockAlign
-        bw.Write((short)16);          // BitsPerSample
-
-        // data subchunk
-        bw.Write(System.Text.Encoding.ASCII.GetBytes("data"));
-        bw.Write(dataSize);
-        foreach (var s in pcm)
-        {
-            bw.Write(s);
-        }
-
-        bw.Flush();
+        // 转换为 16-bit PCM，并写入 WAV 封装
+        var wave16 = new SampleToWaveProvider16(resampledProvider);
+        using var ms = new MemoryStream();
+        WaveFileWriter.WriteWavFileToStream(ms, wave16);
         return ms.ToArray();
+    }
+
+    // 简单的数组驱动的 ISampleProvider，用于把内存中的 float[] 暴露给 NAudio 管线
+    private sealed class FloatArraySampleProvider : ISampleProvider
+    {
+        private readonly float[] _data;
+        private int _position;
+        public WaveFormat WaveFormat { get; }
+
+        public FloatArraySampleProvider(float[] data, WaveFormat format)
+        {
+            _data = data ?? System.Array.Empty<float>();
+            WaveFormat = format;
+            _position = 0;
+        }
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int available = _data.Length - _position;
+            int toCopy = System.Math.Min(count, available);
+            if (toCopy > 0)
+            {
+                System.Array.Copy(_data, _position, buffer, offset, toCopy);
+                _position += toCopy;
+            }
+            return toCopy;
+        }
     }
 }
