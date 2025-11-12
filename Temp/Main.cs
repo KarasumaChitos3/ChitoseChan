@@ -17,6 +17,7 @@ public partial class Main : Node
     private Timer _playbackTimer;
     private AudioEffectCapture _effect;
     private AudioStreamGeneratorPlayback _playback;
+    private Backend.LLMService.LLMService _llmService;
 
     // 用于存储录制的音频数据
     private List<Vector2> _recordedSamples = new List<Vector2>();
@@ -29,6 +30,7 @@ public partial class Main : Node
         _recorder = GetNode<AudioStreamPlayer>("../AudioRecorder");
         _player = GetNode<AudioStreamPlayer>("../AudioPlayer");
         _playbackTimer = GetNode<Timer>("../PlaybackTimer");
+        _llmService = Backend.LLMService.LLMService.CreateDefaultFromEnv();
 
         // 获取 "MicInput" 总线上的 AudioEffectCapture
         int busIndex = AudioServer.GetBusIndex("MicInput");
@@ -165,6 +167,17 @@ public partial class Main : Node
                 using var ms = new MemoryStream(wavBytes);
                 var text = await BackendHost.RecognizeSpeechAsync(ms);
                 GD.Print($"[Whisper] 识别结果: {text}");
+                _ = _llmService.AskAsync($"你在扮演一个AI助手，需要根据用户的输入做出回答。这句话结束之后的内容是其他部分识别用户语音的结果，识别不能保证完全正确，你需要进行一定猜测。用户识别的话语是: {text}").ContinueWith(t =>
+                {
+                    if (t.IsCompletedSuccessfully)
+                    {
+                        GD.Print($"[AI Response]: {t.Result}");
+                    }
+                    else
+                    {
+                        GD.PrintErr("LLM 服务调用失败：" + t.Exception?.Message);
+                    }
+                });
             }
             catch (System.Exception ex)
             {
